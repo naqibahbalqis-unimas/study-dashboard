@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Room made By Violet ❤</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Add these in the head section before your other scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+      }
+      body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        position: relative;
+        color: white;
+      }
+
+      #background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -1;
+        transition: opacity 1s ease;
+      }
+
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: -1;
+      }
+
+      .main-timer {
+        text-align: center;
+        padding: 2rem;
+        backdrop-filter: blur(8px);
+        border-radius: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .header h1 {
+        font-size: 3.5rem;
+        color: white;
+        margin-bottom: 1rem;
+      }
+
+      .time-display {
+        font-size: 8rem;
+        font-weight: bold;
+        color: white;
+        margin: 2rem 0;
+      }
+
+      .timer-controls button {
+        margin: 0 0.5rem;
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 90px;
+      }
+
+      button {
+        background: rgba(255, 255, 255, 0.15);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: white;
+      }
+
+      button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+      }
+
+      .todo-widget {
+        position: absolute;
+        top: 2rem;
+        right: 2rem;
+        width: fit-content;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        cursor: move;
+        z-index: 1000;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .todo-header {
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 1rem 1rem 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .todo-content {
+        padding: 1rem;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .todo-form {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .todo-input {
+        flex: 1;
+        padding: 0.5rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+      }
+
+      .todo-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .todo-list {
+        list-style: none;
+      }
+
+      .todo-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        margin-bottom: 0.5rem;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        color: white;
+      }
+
+      .todo-item.completed span {
+        text-decoration: line-through;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .minimize-btn {
+        background: none;
+        border: none;
+        padding: 0.25rem;
+        cursor: pointer;
+        font-size: 1.2rem;
+        color: white;
+      }
+
+      .todo-widget.minimized .todo-content {
+        display: none;
+      }
+
+      @media (max-width: 768px) {
+        .time-display {
+          font-size: 4rem;
+        }
+        .todo-widget {
+          width: 250px;
+          top: auto;
+          bottom: 2rem;
+          right: 2rem;
+        }
+      }
+
+      #video-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        min-width: 100%;
+        min-height: 100%;
+        width: auto;
+        height: auto;
+        z-index: -2;
+        object-fit: cover;
+        transition: opacity 1s ease;
+      }
+
+      #next-video-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        min-width: 100%;
+        min-height: 100%;
+        width: auto;
+        height: auto;
+        z-index: -3;
+        object-fit: cover;
+        opacity: 0;
+      }
+
+      .radio-widget {
+        position: absolute;
+        top: 2rem;
+        left: 2rem;
+        width: fit-content;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        cursor: move;
+        z-index: 1000;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .radio-header {
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 1rem 1rem 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+      }
+
+      .radio-content {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .radio-play-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: all 0.3s ease;
+      }
+
+      .radio-play-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .radio-play-button.playing {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .radio-info {
+        flex-grow: 1;
+        color: white;
+      }
+
+      .radio-station {
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+      }
+
+      .radio-track {
+        font-size: 0.9em;
+        opacity: 0.8;
+      }
+
+      .volume-slider {
+        width: 100px;
+        margin: 0 1rem;
+      }
+
+      .radio-minimize {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 0.5rem;
+        font-size: 1.2rem;
+      }
+
+      .radio-widget.minimized .radio-content {
+        display: none;
+      }
+
+      /* Volume Slider Styles */
+      .volume-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        width: 80px;
+        cursor: pointer;
+      }
+
+      /* Track */
+      .volume-slider::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        border: none;
+      }
+
+      .volume-slider::-moz-range-track {
+        width: 100%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        border: none;
+      }
+
+      /* Thumb */
+      .volume-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 12px;
+        height: 12px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        margin-top: -4px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .volume-slider::-moz-range-thumb {
+        width: 12px;
+        height: 12px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        border: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Hover effects */
+      .volume-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+        background: rgba(255, 255, 255, 1);
+      }
+
+      .volume-slider::-moz-range-thumb:hover {
+        transform: scale(1.2);
+        background: rgba(255, 255, 255, 1);
+      }
+
+      /* Active state */
+      .volume-slider:active::-webkit-slider-thumb {
+        transform: scale(1.1);
+        background: rgba(255, 255, 255, 1);
+      }
+
+      .volume-slider:active::-moz-range-thumb {
+        transform: scale(1.1);
+        background: rgba(255, 255, 255, 1);
+      }
+
+      /* Volume container with icon */
+      .volume-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .volume-icon {
+        color: white;
+        opacity: 0.8;
+        font-size: 1.2rem;
+        min-width: 20px;
+        cursor: pointer;
+      }
+
+      .volume-icon:hover {
+        opacity: 1;
+      }
+
+      /* Update the radio content layout */
+      .radio-content {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: nowrap;
+      }
+
+      .todo-checkbox {
+        position: relative;
+        width: 18px;
+        height: 18px;
+        margin-right: 10px;
+        cursor: pointer;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      /* Checkbox hover state */
+      .todo-checkbox:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Checkbox checked state */
+      .todo-checkbox:checked {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+
+      /* Checkmark symbol */
+      .todo-checkbox:checked::before {
+        content: "✓";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 12px;
+      }
+
+      /* Update todo item styles */
+      .todo-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.1);
+        margin-bottom: 0.5rem;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        color: white;
+        transition: all 0.3s ease;
+      }
+
+      .todo-item:hover {
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      .todo-item-content {
+        display: flex;
+        align-items: center;
+        flex: 1;
+      }
+
+      .todo-text {
+        transition: all 0.3s ease;
+      }
+
+      .todo-item.completed .todo-text {
+        text-decoration: line-through;
+        opacity: 0.5;
+      }
+
+      .todo-delete {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+      }
+
+      .todo-delete:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      /* Timer Settings Panel */
+      .timer-settings {
+        position: absolute;
+        top: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        z-index: 1001;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+        display: none;
+        min-width: 300px;
+      }
+
+      .timer-settings.show {
+        display: block;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .settings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .settings-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+      }
+
+      .settings-close {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        font-size: 1.5rem;
+        padding: 0;
+      }
+
+      .settings-close:hover {
+        color: white;
+      }
+
+      .settings-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .settings-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+      }
+
+      .time-input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        color: white;
+        width: 100%;
+        margin-bottom: 1rem;
+      }
+
+      .time-input:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.4);
+      }
+
+      .settings-button {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .settings-button:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+
+      /* Add settings gear icon */
+      .timer-controls {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .settings-icon {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+        font-size: 1.2rem;
+        padding: 0.5rem;
+        background: rgba(255, 255, 255, 0.15);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .settings-icon:hover {
+        opacity: 1;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -10px);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, 0);
+        }
+      }
+
+      /* Timer Mode Indicator */
+      .timer-mode {
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 1rem;
+      }
+
+      .mode-toggle {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .mode-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1.5rem;
+        border-radius: 1.5rem;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+      }
+
+      .mode-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .mode-btn.active {
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+      }
+
+      /* Optional: Add a glowing effect to the active button */
+      @keyframes glow {
+        0% {
+          box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+        50% {
+          box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+        100% {
+          box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+      }
+
+      .mode-btn.active {
+        animation: glow 2s infinite;
+      }
+
+      .google-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .google-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .google-btn img {
+        width: 18px;
+        height: 18px;
+      }
+
+      .divider {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.6);
+        margin: 1rem 0;
+        position: relative;
+      }
+
+      .divider::before,
+      .divider::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 45%;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .divider::before {
+        left: 0;
+      }
+
+      .divider::after {
+        right: 0;
+      }
+
+      /* Add animation for auth state changes */
+      .auth-form {
+        transition: all 0.3s ease;
+      }
+
+      .auth-form.hidden {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      /* Add a loading state */
+      .loading {
+        position: relative;
+        pointer-events: none;
+      }
+
+      .loading::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(2px);
+        border-radius: inherit;
+      }
+
+      .user-info {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(10px);
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        z-index: 1000;
+      }
+
+      .logout-btn {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.3s;
+        padding: 0.25rem 0.5rem;
+      }
+
+      .logout-btn:hover {
+        opacity: 1;
+      }
+      /* Updated auth styles */
+      .auth-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+
+      .auth-box {
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        width: 300px;
+        position: relative;
+      }
+
+      .auth-close {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        font-size: 1.2rem;
+        padding: 0.25rem;
+        transition: color 0.3s ease;
+      }
+
+      .auth-close:hover {
+        color: white;
+      }
+      .auth-tabs {
+        display: flex;
+        justify-content: space-between;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.25rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .auth-tab {
+        flex: 1;
+        padding: 0.75rem;
+        text-align: center;
+        font-size: 1rem;
+        background: transparent;
+        border: none;
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+
+      .auth-tab.active {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .auth-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      .auth-box {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .auth-form {
+        display: none; /* Hide forms initially */
+        flex: 1;
+      }
+
+      .auth-form.active {
+        display: block; /* Show only the active form */
+      }
+
+      .auth-form input {
+        width: 100%;
+        padding: 0.5rem;
+        margin-bottom: 0.75rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.4rem;
+        color: white;
+        font-size: 0.9rem;
+      }
+
+      .auth-form button {
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .divider {
+        margin: 0.75rem 0;
+        font-size: 0.8rem;
+      }
+
+      .google-btn {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .google-btn img {
+        width: 16px;
+        height: 16px;
+      }
+
+      /* Add login button style */
+      .login-btn {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        color: white;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .login-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+
+      /* User info styles */
+      .user-info {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(10px);
+        padding: 0.4rem 0.8rem;
+        border-radius: 2rem;
+        font-size: 0.9rem;
+        z-index: 1000;
+      }
+
+      /* Navigation styles */
+      .navbar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 1rem 2rem;
+        z-index: 1000;
+      }
+
+      .nav-content {
+        max-width: max-content;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .nav-right {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .login-btn {
+        padding: 0.5rem 1.5rem;
+        border-radius: 2rem;
+        color: white;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .login-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+      }
+
+      /* Update the main timer position to account for navbar */
+      .main-timer {
+        margin-top: 4rem;
+      }
+
+      /* Update the widgets position */
+      .todo-widget {
+        top: 5rem; /* Increased to account for navbar */
+      }
+
+      .radio-widget {
+        top: 5rem; /* Increased to account for navbar */
+      }
+
+      /* Update user info display for logged-in state */
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: white;
+      }
+
+      .user-email {
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+
+      .logout-btn {
+        padding: 0.4rem 1rem;
+        border-radius: 2rem;
+        color: white;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .google-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .google-btn.loading {
+        position: relative;
+        color: transparent;
+      }
+
+      .google-btn.loading::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: translate(-50%, -50%) rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-content">
+        <div class="nav-left"></div>
+        <!-- Empty div for spacing -->
+        <div class="nav-right">
+          <button class="login-btn" onclick="toggleAuth()">Login</button>
+        </div>
+      </div>
+    </nav>
+    <video id="video-background" autoplay muted loop playsinline>
+      <source
+        src="https://dl.dropboxusercontent.com/scl/fi/xs3bdqpdlcmfffbe62pke/1.mp4?rlkey=gjfy9hj10gxq7n5vprrhhldtq&st=8jc7qdad&dl=0"
+        type="video/mp4"
+      />
+    </video>
+    <video id="next-video-background" autoplay muted loop playsinline>
+      <source
+        src="https://dl.dropboxusercontent.com/scl/fi/xs3bdqpdlcmfffbe62pke/1.mp4?rlkey=gjfy9hj10gxq7n5vprrhhldtq&st=8jc7qdad&dl=0"
+        type="video/mp4"
+      />
+    </video>
+
+    <div class="overlay"></div>
+    <div class="timer-settings" id="timer-settings">
+      <div class="settings-header">
+        <h2>Timer Settings</h2>
+        <button class="settings-close" onclick="toggleSettings()">×</button>
+      </div>
+      <div class="settings-group">
+        <label for="study-time">Study Duration (minutes)</label>
+        <input
+          type="number"
+          id="study-time"
+          class="time-input"
+          value="25"
+          min="1"
+          max="120"
+        />
+      </div>
+      <div class="settings-group">
+        <label for="break-time">Break Duration (minutes)</label>
+        <input
+          type="number"
+          id="break-time"
+          class="time-input"
+          value="10"
+          min="1"
+          max="60"
+        />
+      </div>
+      <button class="settings-button" onclick="applySettings()">
+        Apply Settings
+      </button>
+    </div>
+    <div class="main-timer">
+      <div class="header">
+        <h1>Study Time!</h1>
+      </div>
+      <div class="timer">
+        <div class="mode-toggle">
+          <button
+            class="mode-btn active"
+            id="study-mode-btn"
+            onclick="switchMode('study')"
+          >
+            Study
+          </button>
+          <button
+            class="mode-btn"
+            id="break-mode-btn"
+            onclick="switchMode('break')"
+          >
+            Break
+          </button>
+        </div>
+        <div class="time-display" id="time">25:00</div>
+        <div class="timer-controls">
+          <button onclick="toggleTimer()" id="toggle-btn">Start</button>
+          <button onclick="resetTimer()">Reset</button>
+          <button class="settings-icon" onclick="toggleSettings()">⚙️</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="todo-widget" id="todo-widget">
+      <div class="todo-header" id="todo-header">
+        <h2>Todo List</h2>
+        <button class="minimize-btn" onclick="toggleMinimize()">−</button>
+      </div>
+      <div class="todo-content">
+        <form class="todo-form" onsubmit="addTodo(event)">
+          <input
+            type="text"
+            class="todo-input"
+            placeholder="Add task..."
+            id="todo-input"
+          />
+          <button type="submit">+</button>
+        </form>
+        <ul class="todo-list" id="todo-list"></ul>
+      </div>
+    </div>
+
+    <div class="radio-widget" id="radio-widget">
+      <div class="radio-header" id="radio-header">
+        <h2>Lo-fi Radio</h2>
+        <button class="radio-minimize" onclick="toggleRadioMinimize()">
+          −
+        </button>
+      </div>
+      <div class="radio-content">
+        <button
+          class="radio-play-button"
+          id="radio-play-button"
+          onclick="toggleRadio()"
+        >
+          <i class="play-icon">▶</i>
+        </button>
+        <div class="radio-info">
+          <div class="radio-station">Lo-fi Study & Chill Beats</div>
+          <div class="radio-track" id="current-track">Chillhop Study Beats</div>
+        </div>
+        <div class="volume-container">
+          <span class="volume-icon" id="volume-icon" onclick="toggleMute()"
+            >🔊</span
+          >
+          <input
+            type="range"
+            class="volume-slider"
+            id="volume-slider"
+            min="0"
+            max="100"
+            value="100"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="auth-container" id="auth-container">
+      <div class="auth-box">
+        <button class="auth-close" onclick="toggleAuth()">×</button>
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchAuthTab('login')">
+            Login
+          </button>
+          <button class="auth-tab" onclick="switchAuthTab('signup')">
+            Sign Up
+          </button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+          <input type="email" placeholder="Email" id="login-email" required />
+          <input
+            type="password"
+            placeholder="Password"
+            id="login-password"
+            required
+          />
+          <button type="submit">Login</button>
+          <div class="divider">or</div>
+          <button type="button" class="google-btn" onclick="signInWithGoogle()">
+            <img
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              alt="Google"
+            />
+            Continue with Google
+          </button>
+        </form>
+
+        <!-- Signup Form -->
+        <form id="signup-form" class="auth-form" onsubmit="handleSignup(event)">
+          <input type="email" placeholder="Email" id="signup-email" required />
+          <input
+            type="password"
+            placeholder="Password"
+            id="signup-password"
+            required
+          />
+          <button type="submit">Sign Up</button>
+          <div class="divider">or</div>
+          <button type="button" class="google-btn" onclick="signInWithGoogle()">
+            <img
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              alt="Google"
+            />
+            Continue with Google
+          </button>
+        </form>
+      </div>
+    </div>
+    <script>
+      // Replace your current Firebase initialization with this
+      const firebaseConfig = {
+        apiKey: "AIzaSyDhY4pNd8QXioddMa5wuGVUXHQ1v3cgFLc",
+        authDomain: "study-dashboard-dfcc2.firebaseapp.com",
+        projectId: "study-dashboard-dfcc2",
+        storageBucket: "study-dashboard-dfcc2.firebaseapp.com",
+        messagingSenderId: "906788331022",
+        appId: "1:906788331022:web:ce108284052de19686e65f",
+        measurementId: "G-NW279JB28K",
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+      // Global variables
+      let timeLeft = 25 * 60;
+      let timerId = null;
+      let isRunning = false;
+      let currentBg = 1;
+      let bgChangeTimer = null;
+      let isStudyMode = true;
+      let studyDuration = 25 * 60;
+      let breakDuration = 10 * 60;
+      let isPlaying = false;
+      let lastVolume = 50;
+
+      // Initialize audio player
+      const audioPlayer = new Audio(
+        "https://fluxfm.streamabc.net/flx-chillhop-mp3-128-8581707?sABC=6738s970%230%23p92r898851989pqo194q4p2n0s704q4q%23fgernzf.syhksz.qr&aw_0_1st.playerid=streams.fluxfm.de&amsparams=playerid:streams.fluxfm.de;skey:1731787120"
+      );
+      audioPlayer.volume = 0.5;
+
+      // Background Video Functions
+      function changeBackground(force = false) {
+        const currentVideo = document.getElementById("video-background");
+        const nextVideo = document.getElementById("next-video-background");
+
+        const oldBg = currentBg;
+        while (currentBg === oldBg) {
+          currentBg = Math.floor(Math.random() * 8) + 1;
+        }
+
+        nextVideo.src = `https://dl.dropboxusercontent.com/scl/fi/xs3bdqpdlcmfffbe62pke/1.mp4?rlkey=gjfy9hj10gxq7n5vprrhhldtq&st=8jc7qdad&dl=0`;
+
+        nextVideo.onloadeddata = function () {
+          nextVideo.play();
+          currentVideo.style.opacity = "0";
+          nextVideo.style.opacity = "1";
+
+          setTimeout(() => {
+            currentVideo.style.zIndex = "-3";
+            nextVideo.style.zIndex = "-2";
+            currentVideo.src = `https://dl.dropboxusercontent.com/scl/fi/xs3bdqpdlcmfffbe62pke/1.mp4?rlkey=gjfy9hj10gxq7n5vprrhhldtq&st=8jc7qdad&dl=0`;
+
+            const tempId = currentVideo.id;
+            currentVideo.id = nextVideo.id;
+            nextVideo.id = tempId;
+          }, 1000);
+        };
+      }
+
+      // Timer Functions
+      function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, "0")}:${secs
+          .toString()
+          .padStart(2, "0")}`;
+      }
+
+      function updateDisplay() {
+        document.getElementById("time").textContent = formatTime(timeLeft);
+      }
+
+      function toggleTimer() {
+        const btn = document.getElementById("toggle-btn");
+        if (!isRunning) {
+          if (!timerId) {
+            timerId = setInterval(() => {
+              timeLeft--;
+              updateDisplay();
+              if (timeLeft === 0) {
+                clearInterval(timerId);
+                timerId = null;
+                isRunning = false;
+                btn.textContent = "Start";
+
+                isStudyMode = !isStudyMode;
+                timeLeft = isStudyMode ? studyDuration : breakDuration;
+                updateModeDisplay();
+
+                alert(
+                  isStudyMode
+                    ? "Break time is over! Back to studying!"
+                    : "Study time is over! Take a break!"
+                );
+              }
+            }, 1000);
+          }
+          btn.textContent = "Pause";
+        } else {
+          clearInterval(timerId);
+          timerId = null;
+          btn.textContent = "Start";
+        }
+        isRunning = !isRunning;
+      }
+
+      function resetTimer() {
+        clearInterval(timerId);
+        timerId = null;
+        isRunning = false;
+        timeLeft = isStudyMode ? studyDuration : breakDuration;
+        updateDisplay();
+        updateModeDisplay();
+        document.getElementById("toggle-btn").textContent = "Start";
+      }
+
+      function updateModeDisplay() {
+        const modeElement = document.getElementById("timer-mode");
+        modeElement.textContent = isStudyMode ? "Study Time" : "Break Time";
+        modeElement.style.color = isStudyMode
+          ? "rgba(255, 255, 255, 0.8)"
+          : "rgba(144, 238, 144, 0.8)";
+      }
+
+      // Settings Functions
+      function toggleSettings() {
+        const settings = document.getElementById("timer-settings");
+        settings.classList.toggle("show");
+      }
+
+      function applySettings() {
+        const studyMinutes = parseInt(
+          document.getElementById("study-time").value
+        );
+        const breakMinutes = parseInt(
+          document.getElementById("break-time").value
+        );
+
+        if (studyMinutes > 0 && breakMinutes > 0) {
+          studyDuration = studyMinutes * 60;
+          breakDuration = breakMinutes * 60;
+          resetTimer();
+          toggleSettings();
+        }
+      }
+
+      // Todo Widget Functions
+      const todoWidget = document.getElementById("todo-widget");
+      const todoHeader = document.getElementById("todo-header");
+      let isDragging = false;
+      let currentX;
+      let currentY;
+      let initialX;
+      let initialY;
+      let xOffset = 0;
+      let yOffset = 0;
+
+      function dragStart(e) {
+        if (e.type === "mousedown") {
+          initialX = e.clientX - xOffset;
+          initialY = e.clientY - yOffset;
+        } else {
+          initialX = e.touches[0].clientX - xOffset;
+          initialY = e.touches[0].clientY - yOffset;
+        }
+
+        if (e.target === todoHeader) {
+          isDragging = true;
+        }
+      }
+
+      function drag(e) {
+        if (isDragging) {
+          e.preventDefault();
+
+          if (e.type === "mousemove") {
+            currentX = e.clientX - initialX;
+            currentY = e.clientY - initialY;
+          } else {
+            currentX = e.touches[0].clientX - initialX;
+            currentY = e.touches[0].clientY - initialY;
+          }
+
+          xOffset = currentX;
+          yOffset = currentY;
+          setTranslate(currentX, currentY, todoWidget);
+        }
+      }
+
+      function setTranslate(xPos, yPos, el) {
+        el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+      }
+
+      function dragEnd() {
+        isDragging = false;
+      }
+
+      function toggleMinimize() {
+        todoWidget.classList.toggle("minimized");
+        const btn = document.querySelector(".minimize-btn");
+        btn.textContent = todoWidget.classList.contains("minimized")
+          ? "+"
+          : "−";
+      }
+
+      async function addTodo(e) {
+        e.preventDefault();
+        const input = document.getElementById("todo-input");
+        const text = input.value.trim();
+
+        if (text && currentUser) {
+          try {
+            // Use subcollection path
+            await db
+              .collection("users")
+              .doc(currentUser.uid)
+              .collection("todos")
+              .add({
+                text: text,
+                completed: false,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              });
+
+            input.value = "";
+            await loadTodos();
+          } catch (error) {
+            console.error("Error adding todo:", error);
+            alert("Error adding todo: " + error.message);
+          }
+        } else if (!currentUser) {
+          // Handle non-logged in users
+          const todoList = document.getElementById("todo-list");
+          const li = document.createElement("li");
+          li.className = "todo-item";
+          li.innerHTML = `
+            <div class="todo-item-content">
+                <input type="checkbox" class="todo-checkbox" onchange="toggleTodo(this)">
+                <span class="todo-text">${text}</span>
+            </div>
+            <button class="todo-delete" onclick="removeTodo(this)">×</button>
+        `;
+          todoList.appendChild(li);
+          input.value = "";
+        }
+      }
+
+      async function loadTodos() {
+        if (!currentUser) {
+          return;
+        }
+
+        try {
+          const snapshot = await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("todos")
+            .orderBy("createdAt", "desc")
+            .get();
+
+          const todoList = document.getElementById("todo-list");
+          todoList.innerHTML = "";
+
+          snapshot.forEach((doc) => {
+            const todo = doc.data();
+            const li = document.createElement("li");
+            li.className = `todo-item ${todo.completed ? "completed" : ""}`;
+            li.dataset.id = doc.id;
+            li.innerHTML = `
+                <div class="todo-item-content">
+                    <input type="checkbox" class="todo-checkbox" onchange="toggleTodo(this)" ${
+                      todo.completed ? "checked" : ""
+                    }>
+                    <span class="todo-text">${todo.text}</span>
+                </div>
+                <button class="todo-delete" onclick="removeTodo(this)">×</button>
+            `;
+            todoList.appendChild(li);
+          });
+        } catch (error) {
+          console.error("Error loading todos:", error);
+        }
+      }
+
+      async function toggleTodo(checkbox) {
+        if (!currentUser) return;
+
+        const todoItem = checkbox.closest(".todo-item");
+        const todoId = todoItem.dataset.id;
+
+        try {
+          await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("todos")
+            .doc(todoId)
+            .update({
+              completed: checkbox.checked,
+            });
+
+          todoItem.classList.toggle("completed");
+        } catch (error) {
+          console.error("Error updating todo:", error);
+          checkbox.checked = !checkbox.checked; // Revert checkbox if error
+        }
+      }
+
+      async function removeTodo(button) {
+        if (!currentUser) return;
+
+        const todoItem = button.closest(".todo-item");
+        const todoId = todoItem.dataset.id;
+
+        try {
+          await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("todos")
+            .doc(todoId)
+            .delete();
+
+          todoItem.style.opacity = "0";
+          todoItem.style.transform = "translateX(20px)";
+          setTimeout(() => {
+            todoItem.remove();
+          }, 300);
+        } catch (error) {
+          console.error("Error removing todo:", error);
+        }
+      }
+
+      // Radio Widget Functions
+      const radioWidget = document.getElementById("radio-widget");
+      const radioHeader = document.getElementById("radio-header");
+      let radioIsDragging = false;
+      let radioCurrentX;
+      let radioCurrentY;
+      let radioInitialX;
+      let radioInitialY;
+      let radioXOffset = 0;
+      let radioYOffset = 0;
+
+      function radioStart(e) {
+        if (e.type === "mousedown") {
+          radioInitialX = e.clientX - radioXOffset;
+          radioInitialY = e.clientY - radioYOffset;
+        }
+
+        if (e.target === radioHeader) {
+          radioIsDragging = true;
+        }
+      }
+
+      function radioDrag(e) {
+        if (radioIsDragging) {
+          e.preventDefault();
+          radioCurrentX = e.clientX - radioInitialX;
+          radioCurrentY = e.clientY - radioInitialY;
+          radioXOffset = radioCurrentX;
+          radioYOffset = radioCurrentY;
+          setRadioPosition(radioCurrentX, radioCurrentY);
+        }
+      }
+
+      function setRadioPosition(xPos, yPos) {
+        radioWidget.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+      }
+
+      function radioEnd() {
+        radioIsDragging = false;
+      }
+
+      function toggleRadioMinimize() {
+        radioWidget.classList.toggle("minimized");
+        const btn = document.querySelector(".radio-minimize");
+        btn.textContent = radioWidget.classList.contains("minimized")
+          ? "+"
+          : "−";
+      }
+
+      function toggleRadio() {
+        const playButton = document.getElementById("radio-play-button");
+        const playIcon = playButton.querySelector(".play-icon");
+
+        if (isPlaying) {
+          audioPlayer.pause();
+          playIcon.textContent = "▶";
+          playButton.classList.remove("playing");
+        } else {
+          audioPlayer.play();
+          playIcon.textContent = "⏸";
+          playButton.classList.add("playing");
+        }
+
+        isPlaying = !isPlaying;
+      }
+
+      // Volume Control Functions
+      function updateVolumeIcon(value) {
+        const volumeIcon = document.getElementById("volume-icon");
+        if (value === 0) {
+          volumeIcon.textContent = "🔇";
+        } else if (value < 50) {
+          volumeIcon.textContent = "🔉";
+        } else {
+          volumeIcon.textContent = "🔊";
+        }
+      }
+
+      function toggleMute() {
+        const volumeSlider = document.getElementById("volume-slider");
+        if (volumeSlider.value > 0) {
+          lastVolume = volumeSlider.value;
+          volumeSlider.value = 0;
+          audioPlayer.volume = 0;
+          updateVolumeIcon(0);
+        } else {
+          volumeSlider.value = lastVolume;
+          audioPlayer.volume = lastVolume / 100;
+          updateVolumeIcon(lastVolume);
+        }
+      }
+
+      // Event Listeners
+      document.addEventListener("DOMContentLoaded", function () {
+        // Todo drag events
+        todoHeader.addEventListener("mousedown", dragStart);
+        document.addEventListener("mousemove", drag);
+        document.addEventListener("mouseup", dragEnd);
+        todoHeader.addEventListener("touchstart", dragStart);
+        document.addEventListener("touchmove", drag);
+        document.addEventListener("touchend", dragEnd);
+
+        // Radio drag events
+        radioHeader.addEventListener("mousedown", radioStart);
+        document.addEventListener("mousemove", radioDrag);
+        document.addEventListener("mouseup", radioEnd);
+
+        // Volume control
+        const volumeSlider = document.getElementById("volume-slider");
+        volumeSlider.value = 50;
+        volumeSlider.addEventListener("input", (e) => {
+          const value = e.target.value;
+          audioPlayer.volume = value / 100;
+          updateVolumeIcon(value);
+        });
+
+        // Initialize displays
+        updateDisplay();
+        updateModeDisplay();
+        updateVolumeIcon(50);
+
+        // Start background change timer if needed
+        if (bgChangeTimer) {
+          clearInterval(bgChangeTimer);
+        }
+        bgChangeTimer = setInterval(changeBackground, 15 * 60 * 1000); // 15 minutes
+      });
+
+      // Audio player loaded event
+      audioPlayer.addEventListener("loadeddata", () => {
+        audioPlayer.volume = 0.5;
+      });
+
+      function switchMode(mode) {
+        // Reset timer state
+        clearInterval(timerId);
+        timerId = null;
+        isRunning = false;
+        document.getElementById("toggle-btn").textContent = "Start";
+
+        // Update mode
+        isStudyMode = mode === "study";
+        timeLeft = isStudyMode ? studyDuration : breakDuration;
+
+        // Update display
+        updateDisplay();
+        updateModeButtons();
+      }
+
+      function updateModeButtons() {
+        const studyBtn = document.getElementById("study-mode-btn");
+        const breakBtn = document.getElementById("break-mode-btn");
+
+        if (isStudyMode) {
+          studyBtn.classList.add("active");
+          breakBtn.classList.remove("active");
+        } else {
+          studyBtn.classList.remove("active");
+          breakBtn.classList.add("active");
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // ... existing code ...
+        updateModeButtons(); // Initialize button states
+      });
+
+      let currentUser = null;
+      auth.onAuthStateChanged(async (user) => {
+        console.log("Auth state changed:", user);
+        try {
+          if (user) {
+            currentUser = user;
+
+            // Update UI
+            document.getElementById("auth-container").style.display = "none";
+
+            // Update nav
+            const navRight = document.querySelector(".nav-right");
+            if (user.photoURL) {
+              navRight.innerHTML = `
+                    <span class="user-email">${user.email}</span>
+                    <button class="logout-btn" onclick="handleLogout()">Logout</button>
+                `;
+            } else {
+              navRight.innerHTML = `
+                    <span class="user-email">${user.email}</span>
+                    <button class="logout-btn" onclick="handleLogout()">Logout</button>
+                `;
+            }
+
+            // Load todos
+            await loadTodos();
+          } else {
+            currentUser = null;
+            document.getElementById("auth-container").style.display = "none";
+
+            // Reset nav
+            const navRight = document.querySelector(".nav-right");
+            navRight.innerHTML = `
+                <button class="login-btn" onclick="toggleAuth()">Login</button>
+            `;
+
+            clearTodos();
+          }
+        } catch (error) {
+          console.error("Error in auth state observer:", error);
+        }
+      });
+      // Add this function to remove user info when logged out
+      function removeUserInfo() {
+        const userInfo = document.querySelector(".user-info");
+        if (userInfo) {
+          userInfo.remove();
+        }
+      }
+
+      function updateUserInfo(user) {
+        // Create user info element if it doesn't exist
+        let userInfo = document.querySelector(".user-info");
+        if (!userInfo) {
+          userInfo = document.createElement("div");
+          userInfo.className = "user-info";
+          document.body.appendChild(userInfo);
+        }
+
+        userInfo.innerHTML = `
+        <span>${user.email}</span>
+        <button class="logout-btn" onclick="handleLogout()">Logout</button>
+    `;
+      }
+      function switchAuthTab(tab) {
+        // Toggle active state for tabs
+        document
+          .querySelectorAll(".auth-tab")
+          .forEach((t) => t.classList.remove("active"));
+        document
+          .querySelectorAll(".auth-form")
+          .forEach((f) => f.classList.remove("active"));
+
+        if (tab === "login") {
+          document
+            .querySelector(".auth-tab:first-child")
+            .classList.add("active");
+          document.getElementById("login-form").classList.add("active");
+        } else {
+          document
+            .querySelector(".auth-tab:last-child")
+            .classList.add("active");
+          document.getElementById("signup-form").classList.add("active");
+        }
+      }
+
+      async function handleLogin(e) {
+        e.preventDefault();
+        const email = document.getElementById("login-email").value;
+        const password = document.getElementById("login-password").value;
+
+        try {
+          await auth.signInWithEmailAndPassword(email, password);
+        } catch (error) {
+          alert(error.message);
+        }
+      }
+
+      async function handleSignup(e) {
+        e.preventDefault();
+        const email = document.getElementById("signup-email").value;
+        const password = document.getElementById("signup-password").value;
+
+        try {
+          // Create the user
+          const userCredential = await auth.createUserWithEmailAndPassword(
+            email,
+            password
+          );
+
+          // Store minimal user data
+          await db.collection("users").doc(userCredential.user.uid).set({
+            email: email,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+
+          // Close auth modal
+          toggleAuth();
+        } catch (error) {
+          console.error("Signup error:", error);
+          alert(error.message);
+        }
+      }
+      async function handleLogout() {
+        try {
+          await auth.signOut();
+          console.log("Successfully logged out");
+        } catch (error) {
+          console.error("Logout error:", error);
+          alert("Error logging out: " + error.message);
+        }
+      }
+
+      // Modify the todo functions to work with Firebase
+      async function addTodo(e) {
+        e.preventDefault();
+        const input = document.getElementById("todo-input");
+        const text = input.value.trim();
+
+        if (text && currentUser) {
+          try {
+            await db
+              .collection("users")
+              .doc(currentUser.uid)
+              .collection("todos")
+              .add({
+                text: text,
+                completed: false,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              });
+            input.value = "";
+            await loadTodos(); // Reload todos
+          } catch (error) {
+            alert("Error adding todo: " + error.message);
+          }
+        }
+      }
+
+      async function toggleTodo(checkbox) {
+        if (!currentUser) return;
+
+        const todoItem = checkbox.closest(".todo-item");
+        const todoId = todoItem.dataset.id;
+
+        try {
+          await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("todos")
+            .doc(todoId)
+            .update({
+              completed: checkbox.checked,
+            });
+          todoItem.classList.toggle("completed");
+        } catch (error) {
+          alert("Error updating todo: " + error.message);
+        }
+      }
+
+      async function removeTodo(button) {
+        if (!currentUser) return;
+
+        const todoItem = button.closest(".todo-item");
+        const todoId = todoItem.dataset.id;
+
+        try {
+          await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("todos")
+            .doc(todoId)
+            .delete();
+
+          todoItem.style.opacity = "0";
+          todoItem.style.transform = "translateX(20px)";
+          setTimeout(() => {
+            todoItem.remove();
+          }, 300);
+        } catch (error) {
+          alert("Error removing todo: " + error.message);
+        }
+      }
+
+      async function loadTodos() {
+        if (!currentUser) return;
+
+        try {
+          const snapshot = await db
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("todos")
+            .orderBy("createdAt", "desc")
+            .get();
+
+          const todoList = document.getElementById("todo-list");
+          todoList.innerHTML = "";
+
+          snapshot.forEach((doc) => {
+            const todo = doc.data();
+            const li = document.createElement("li");
+            li.className = `todo-item ${todo.completed ? "completed" : ""}`;
+            li.dataset.id = doc.id;
+            li.innerHTML = `
+                <div class="todo-item-content">
+                    <input type="checkbox" class="todo-checkbox" onchange="toggleTodo(this)" ${
+                      todo.completed ? "checked" : ""
+                    }>
+                    <span class="todo-text">${todo.text}</span>
+                </div>
+                <button class="todo-delete" onclick="removeTodo(this)">×</button>
+            `;
+            todoList.appendChild(li);
+          });
+        } catch (error) {
+          alert("Error loading todos: " + error.message);
+        }
+      }
+
+      function clearTodos() {
+        const todoList = document.getElementById("todo-list");
+        todoList.innerHTML = "";
+      }
+
+      // Add this function for Google sign-in
+      // Add this at the top of your script with other configurations
+      const googleProvider = new firebase.auth.GoogleAuthProvider();
+      googleProvider.addScope("profile");
+      googleProvider.addScope("email");
+      async function signInWithGoogle() {
+        try {
+          // Show loading state
+          const googleBtn = document.querySelector(".google-btn");
+          googleBtn.disabled = true;
+          googleBtn.innerHTML = "Loading...";
+
+          // Sign in with popup
+          const result = await auth.signInWithPopup(googleProvider);
+          const user = result.user;
+
+          console.log("Google sign-in successful", user);
+
+          // Save user data to Firestore
+          await db.collection("users").doc(user.uid).set(
+            {
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL,
+              lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+          );
+
+          toggleAuth();
+        } catch (error) {
+          console.error("Google sign-in error:", error);
+
+          if (error.code === "auth/unauthorized-domain") {
+            alert(
+              "This domain is not authorized. Please ensure you are accessing from an authorized domain."
+            );
+            console.log("Current domain:", window.location.hostname);
+          } else {
+            alert(error.message);
+          }
+        } finally {
+          // Reset button state
+          const googleBtn = document.querySelector(".google-btn");
+          googleBtn.disabled = false;
+          googleBtn.innerHTML = `
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
+            Continue with Google
+        `;
+        }
+      }
+      async function handleSignup(e) {
+        e.preventDefault();
+        const email = document.getElementById("signup-email").value;
+        const password = document.getElementById("signup-password").value;
+
+        // Basic password validation
+        if (password.length < 6) {
+          alert("Password must be at least 6 characters long");
+          return;
+        }
+
+        try {
+          const userCredential = await auth.createUserWithEmailAndPassword(
+            email,
+            password
+          );
+          await db.collection("users").doc(userCredential.user.uid).set({
+            email: email,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          toggleAuth();
+        } catch (error) {
+          console.error("Signup error:", error);
+          if (error.code === "auth/email-already-in-use") {
+            alert("This email is already registered. Please login instead.");
+          } else if (error.code === "auth/invalid-email") {
+            alert("Please enter a valid email address.");
+          } else {
+            alert(error.message);
+          }
+        }
+      }
+      function toggleAuth() {
+        const authContainer = document.getElementById("auth-container");
+        authContainer.style.display =
+          authContainer.style.display === "none" ? "flex" : "none";
+      }
+    </script>
+  </body>
+</html>
